@@ -68,6 +68,26 @@ export type ExpenseSummary = {
   total: number;
 };
 
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type AuthSession = {
+  token: string;
+  user: AuthUser;
+};
+
+export type LoginInput = {
+  email: string;
+  password: string;
+};
+
+export type SignupInput = LoginInput & {
+  name: string;
+};
+
 export type OverviewResponse = {
   allTimeTotals: ExpenseSummary[];
   availableMonths: string[];

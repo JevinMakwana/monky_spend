@@ -99,6 +99,7 @@ export default function ExpenseDashboard() {
   const [wishAdjustAmounts, setWishAdjustAmounts] = useState<Record<string, number>>({});
   const [adjustingWishId, setAdjustingWishId] = useState<string | null>(null);
 
+  const todayLabel = dayjs().format("DD MMM YYYY");
   const selectedMonthLabel = dayjs(`${selectedMonth}-01`).format("MMMM YYYY");
   const currentMonthTotals = useMemo(() => sumByCategory(expenses), [expenses]);
   const totalSpent = useMemo(() => {
@@ -405,6 +406,14 @@ export default function ExpenseDashboard() {
             {/* Row 1: Selected month totals */}
             <div className="hero-row hero-row--summary">
               <div>
+                <div className="hero-today-heading">
+                  <div>
+                    <Title level={4} style={{ color: "#fff",  "marginBottom": "0" }}>
+                      {todayLabel}
+                    </Title>
+                  </div>
+                </div>
+
                 <Card variant="borderless" className="selected-total-card" style={{ borderRadius: 24 }}>
                   <Statistic title="Selected month total" value={currency(totalSpent)} />
                   <Text type="secondary">{selectedMonthLabel}</Text>

@@ -1,5 +1,5 @@
-import ExpenseDashboard from "../components/ExpenseDashboard";
+import AuthGate from "../components/AuthGate";
 
 export default function HomePage() {
-  return <ExpenseDashboard />;
+  return <AuthGate />;
 }
