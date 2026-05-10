@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { authRouter } from "./routes/authRoutes";
 import { expenseRouter } from "./routes/expenseRoutes";
 
 export function createApp() {
@@ -42,6 +43,7 @@ export function createApp() {
     res.json({ status: "ok" });
   });
 
+  app.use("/api/auth", authRouter);
   app.use("/api/expenses", expenseRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

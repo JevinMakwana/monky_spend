@@ -1,8 +1,9 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { z } from "zod";
 import { ExpenseModel } from "../models/Expense";
 import { WishItemModel } from "../models/WishItem";
 import { expenseCategories, categoryLabels, type ExpenseCategory } from "../constants/expenseCategories";
+import { getAuthenticatedUserId } from "../utils/auth";
 
 export const expenseRouter = Router();
 
@@ -40,9 +41,13 @@ const adjustWishItemSchema = z.object({
   delta: z.coerce.number().finite()
 });
 
+function resolveUserId(req: Request, fallbackUserId?: string) {
+  return getAuthenticatedUserId(req) ?? fallbackUserId ?? "guest-user";
+}
+
 function serializeExpense(expense: {
   _id: unknown;
-  userId: string;
+  userId: unknown;
   itemName: string;
   category: ExpenseCategory;
   amount: number;
@@ -52,7 +57,7 @@ function serializeExpense(expense: {
 }) {
   return {
     _id: String(expense._id),
-    userId: expense.userId,
+    userId: String(expense.userId),
     itemName: expense.itemName,
     category: expense.category,
     amount: expense.amount,
@@ -64,7 +69,7 @@ function serializeExpense(expense: {
 
 function serializeWishItem(item: {
   _id: unknown;
-  userId: string;
+  userId: unknown;
   itemName: string;
   targetAmount: number;
   monthlyCommitment: number;
@@ -75,7 +80,7 @@ function serializeWishItem(item: {
   const remainingAmount = Math.max(0, item.targetAmount - item.savedAmount);
   return {
     _id: String(item._id),
-    userId: item.userId,
+    userId: String(item.userId),
     itemName: item.itemName,
     targetAmount: item.targetAmount,
     monthlyCommitment: item.monthlyCommitment,
@@ -105,7 +110,7 @@ expenseRouter.get("/", async (req, res, next) => {
   try {
     const parsed = querySchema.parse(req.query);
     const month = parsed.month ?? new Date().toISOString().slice(0, 7);
-    const userId = parsed.userId ?? "guest-user";
+    const userId = resolveUserId(req, parsed.userId);
     const { start, end } = monthBounds(month);
 
     const expenses = await ExpenseModel.find({
@@ -127,7 +132,7 @@ expenseRouter.get("/", async (req, res, next) => {
 expenseRouter.get("/overview", async (req, res, next) => {
   try {
     const parsed = querySchema.parse(req.query);
-    const userId = parsed.userId ?? "guest-user";
+    const userId = resolveUserId(req, parsed.userId);
 
     const totals = await ExpenseModel.aggregate([
       { $match: { userId } },
@@ -174,7 +179,7 @@ expenseRouter.post("/", async (req, res, next) => {
   try {
     const parsed = createExpenseSchema.parse(req.body);
     const expense = await ExpenseModel.create({
-      userId: parsed.userId ?? "guest-user",
+      userId: resolveUserId(req, parsed.userId),
       itemName: parsed.itemName,
       category: parsed.category,
       amount: parsed.amount,
@@ -191,7 +196,7 @@ expenseRouter.delete("/:id", async (req, res, next) => {
   try {
     const params = expenseParamsSchema.parse(req.params);
     const parsedQuery = userOnlyQuerySchema.parse(req.query);
-    const userId = parsedQuery.userId ?? "guest-user";
+    const userId = resolveUserId(req, parsedQuery.userId);
 
     const deleted = await ExpenseModel.findOneAndDelete({
       _id: params.id,
@@ -211,7 +216,7 @@ expenseRouter.delete("/:id", async (req, res, next) => {
 expenseRouter.get("/wishlist", async (req, res, next) => {
   try {
     const parsed = userOnlyQuerySchema.parse(req.query);
-    const userId = parsed.userId ?? "guest-user";
+    const userId = resolveUserId(req, parsed.userId);
 
     const items = await WishItemModel.find({ userId })
       .sort({ createdAt: -1 })
@@ -227,7 +232,7 @@ expenseRouter.post("/wishlist", async (req, res, next) => {
   try {
     const parsed = createWishItemSchema.parse(req.body);
     const item = await WishItemModel.create({
-      userId: parsed.userId ?? "guest-user",
+      userId: resolveUserId(req, parsed.userId),
       itemName: parsed.itemName,
       targetAmount: parsed.targetAmount,
       monthlyCommitment: parsed.monthlyCommitment,
@@ -244,7 +249,7 @@ expenseRouter.patch("/wishlist/:id/saved-amount", async (req, res, next) => {
   try {
     const params = expenseParamsSchema.parse(req.params);
     const parsed = adjustWishItemSchema.parse(req.body);
-    const userId = parsed.userId ?? "guest-user";
+    const userId = resolveUserId(req, parsed.userId);
 
     const item = await WishItemModel.findOne({
       _id: params.id,

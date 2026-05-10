@@ -14,7 +14,8 @@ A two-part web app for tracking monthly expenses with a Next.js frontend and a N
 - Browse monthly expense history with month navigation
 - View table of expenses for the selected month
 - View all-time category totals in a secondary summary
-- Backend stores a `userId` field for future login support, but the app currently uses a single default user
+- User signup and login with JWT-backed sessions
+- Backend stores expense and wish data per authenticated user
 
 ## Run locally
 
@@ -37,11 +38,14 @@ npm run dev
 
 4. Open `http://localhost:3000`.
 
+After signing up or logging in, the app stores your session in the browser and uses it for all expense and wish requests.
+
 ## Environment variables
 
 - `backend/.env`
   - `PORT=4000`
   - `MONGODB_URI=mongodb://127.0.0.1:27017/monthly-expenses`
   - `CORS_ORIGIN=http://localhost:3000`
+  - `JWT_SECRET=replace-with-a-long-random-string`
 - `frontend/.env.local`
   - `NEXT_PUBLIC_API_BASE_URL=http://localhost:4000`

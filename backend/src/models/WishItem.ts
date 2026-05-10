@@ -3,10 +3,10 @@ import { Schema, model } from "mongoose";
 const wishItemSchema = new Schema(
   {
     userId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
       index: true,
-      default: "guest-user"
     },
     itemName: {
       type: String,
